@@ -1,0 +1,12 @@
+.click-layer {
+  position: fixed;
+  inset: 0;
+  cursor: pointer;
+  z-index: 5;
+}
+.click-layer {
+  position: fixed;
+  inset: 0;
+  cursor: pointer;
+  z-index: 5;
+}
