@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+
+  <meta charset="UTF-8">
+  <title>Love is</title>
+    <link rel="stylesheet" href="onboard-style.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: url("onboard.png") no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+<div onclick="location.href='home.html'">
+</div>
+<canvas id="snow"></canvas>
+<div class="click-layer" onclick="location.href='home.html'"></div>
+
+<script>
+  const canvas = document.getElementById("snow");
+  const ctx = canvas.getContext("2d");
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  const snowflakes = [];
+  const COUNT = 600;
+
+  for (let i = 0; i < COUNT; i++) {
+    snowflakes.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 6 + 1,
+      d: Math.random() + 0.1
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.beginPath();
+
+    for (let i = 0; i < COUNT; i++) {
+      const f = snowflakes[i];
+      ctx.moveTo(f.x, f.y);
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    }
+
+    ctx.fill();
+    move();
+  }
+
+  let angle = 0;
+
+  function move() {
+    angle += 0.01;
+
+    for (let i = 0; i < COUNT; i++) {
+      const f = snowflakes[i];
+      f.y += Math.pow(f.d, 2) + 1;
+      f.x += Math.sin(angle) * 0.5;
+
+      if (f.y > canvas.height) {
+        snowflakes[i] = {
+          x: Math.random() * canvas.width,
+          y: 0,
+          r: f.r,
+          d: f.d
+        };
+      }
+    }
+  }
+
+  function animate() {
+    draw();
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+</script>
+</body>
+</html>

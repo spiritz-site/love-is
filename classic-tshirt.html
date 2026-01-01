@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classic Футболка</title>
+  <link rel="stylesheet" href="style-clothes.css">
+  <style>
+    /* Добавим немного стилей для визуализации активного цвета, 
+       если их нет в твоем CSS */
+    .color-dot {
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .color-dot:hover {
+      transform: scale(1.2);
+    }
+    .color-dot.active {
+      outline: 2px solid #000;
+      outline-offset: 2px;
+    }
+    .size-box {
+      cursor: pointer;
+    }
+    .size-box.selected {
+      background-color: #000;
+      color: #fff;
+    }
+  </style>
+</head>
+<div id="overlay" class="overlay hidden">
+  <div class="overlay-box">
+    <p>Өлшемді таңдаңыз<br>Выберите размер<br></p>
+    <button onclick="closeOverlay()">Окей</button>
+  </div>
+</div>
+
+<body>
+
+  <div class="product-card">
+    <div class="image-container">
+      <img id="main-img" class="main-tshirt" src="black_classic_tshirt.png" alt="Classic Футболка"> 
+      
+      <button class="circle-btn btn-back" onclick="window.location.href='../main/home.html';"> 
+  
+        <img src="Back.png" alt="Назад">
+      </button>
+       
+      </button>
+      
+      <button class="circle-btn btn-heart" id="favBtn">
+  <img src="Heart.png" alt="В избранное" id="heartIcon">
+</button>
+
+<script>
+const key = "fav-" + location.pathname;
+const icon = document.getElementById("heartIcon");
+
+if (localStorage.getItem(key)) {
+  icon.classList.add("active");
+}
+
+document.getElementById("favBtn").onclick = () => {
+  if (localStorage.getItem(key)) {
+    localStorage.removeItem(key);
+    icon.classList.remove("active");
+  } else {
+    localStorage.setItem(key, "1");
+    icon.classList.add("active");
+  }
+};
+</script>
+
+<style>
+  .overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.overlay-box {
+  background: #fff;
+  padding: 24px 32px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 280px;
+  animation: pop 0.25s ease;
+}
+
+.overlay-box p {
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+.overlay-box button {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: none;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.btn-heart img.active {
+  filter: brightness(0) saturate(100%) invert(23%) sepia(94%) saturate(7482%) hue-rotate(353deg);
+}
+</style>
+
+    </div>
+
+    <div class="content-padding">
+      
+      <div class="meta-row">
+        <span class="oversize-label">Classic Футболка</span>
+        <div class="color-picker">
+          <div class="color-dot dot-black active" onclick="updateProduct('Черная Classic Футболка', 'black_classic_tshirt.png', this)"></div>
+          <div class="color-dot dot-white" onclick="updateProduct('Белая Classic Футболка', 'white_classic_tshirt.png', this)"></div>
+          <div class="color-dot dot-yellow" onclick="updateProduct('Желтая Classic Футболка', 'yellow_classic_tshirt.png', this)"></div>
+          <div class="color-dot dot-red" onclick="updateProduct('Темно-серая Classic Футболка', 'red_classic_tshirt.png', this)"></div>
+          <div class="color-dot dot-green" onclick="updateProduct('Темно-зеленая Classic Футболка', 'green_classic_tshirt.png', this)"></div>
+         
+        </div>
+      </div>
+
+      <h1 id="product-title" class="product-title">Черная Classic Футболка</h1>
+      <div class="price-row">
+        <div class="counter">
+          <button class="counter-btn" onclick="changeQty(-1)">-</button>
+          <span id="quantity" class="counter-val">01</span>
+          <button class="counter-btn" onclick="changeQty(1)">+</button>
+        </div>
+        <div class="price-tag"><span id="total-price">5000</span>₸</div>
+      </div>
+
+      <div class="size-selector">
+        <div class="size-box" onclick="selectSize(this)">S</div>
+        <div class="size-box" onclick="selectSize(this)">M</div>
+        <div class="size-box" onclick="selectSize(this)">L</div>
+        <div class="size-box" onclick="selectSize(this)">XL</div>
+        <div class="size-box" onclick="selectSize(this)">2XL</div>
+      </div>
+
+      <div class="description">
+        Стильная Classic Футболка — идеальная база для повседневных
+        образов и самовыражения. Подходит как для парней, так и для девушек. 
+        <br><br>
+        Вы можете нанести любой свой принт: логотип, надпись, арт, фото или дизайн бренда.
+      </div>
+
+      <button class="buy-button" onclick="orderWhatsApp()">Заказать</button>
+
+      
+    </div>
+  </div>
+
+  <script>
+  const pricePerUnit = 5000;
+
+  function updateProduct(title, imageSrc, element) {
+    document.getElementById('product-title').innerText = title;
+    document.getElementById('main-img').src = imageSrc;
+
+    document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
+    element.classList.add('active');
+  }
+
+  function changeQty(amount) {
+    const qtyElement = document.getElementById('quantity');
+    const priceElement = document.getElementById('total-price');
+
+    let currentQty = parseInt(qtyElement.innerText);
+    currentQty += amount;
+    if (currentQty < 1) currentQty = 1;
+
+    qtyElement.innerText = currentQty < 10 ? '0' + currentQty : currentQty;
+    priceElement.innerText = currentQty * pricePerUnit;
+  }
+
+  function selectSize(element) {
+    document.querySelectorAll('.size-box').forEach(box => box.classList.remove('selected'));
+    element.classList.add('selected');
+  }
+
+  function orderWhatsApp() {
+    const phone = "7471903445";
+
+    const title = document.getElementById("product-title").innerText;
+    const qty = document.getElementById("quantity").innerText;
+    const price = document.getElementById("total-price").innerText;
+
+    const sizeEl = document.querySelector(".size-box.selected");
+    if (!sizeEl) {
+      showOverlay();
+return;
+
+    }
+
+    const size = sizeEl.innerText;
+
+    const text =
+      "Здравствуйте!\n" +
+      "Хочу заказать:\n" +
+      title + "\n" +
+      "Размер: " + size + "\n" +
+      "Количество: " + qty + "\n" +
+      "Итого: " + price + "₸";
+
+    const url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(text);
+    window.location.href = url;
+  }
+  function showOverlay() {
+  document.getElementById("overlay").classList.remove("hidden");
+}
+
+function closeOverlay() {
+  document.getElementById("overlay").classList.add("hidden");
+}
+
+</script>
+
+</body>
+</html>

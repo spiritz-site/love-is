@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Главная</title>
+  <link rel="stylesheet" href="home-style.css" />
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+</style>
+</head>
+<body>
+
+<div class="app">
+
+
+  <!-- Header -->
+  <header class="header">
+    <div class="search-box">
+  <img src="Search.png" alt="search">
+  <input type="text" id="search-input" placeholder="Іздеу / Поиск">
+  <span id="clear-search" style="display:none; cursor:pointer; margin-left:15px; font-size:20px; color:#999;">&times;</span>
+</div>
+    <img 
+  class="logo" 
+  src="spiritz.jpg" 
+  alt="logo" 
+  onclick="location.href='https://spiritz-site.github.io/spiritz/';" 
+  style="cursor: pointer;">
+  </header>
+
+  <!-- Banner -->
+  <section class="banner">
+    <img src="banner.png" alt="banner">
+  </section>
+
+
+  <!-- Categories -->
+  <section class="categories">
+  <button class="category-btn active" data-filter="all">Барлығы</button>
+  <button class="category-btn" data-filter="tshirt">Футболка</button>
+  <button class="category-btn" data-filter="sweatshirt">Свитшот</button>
+  <button class="category-btn" data-filter="hoodie">Толстовка</button>
+  <button class="category-btn" data-filter="polo">Поло</button>
+  <button class="category-btn" data-filter="designs">Дизайн</button>
+</section>
+
+  <!-- Products -->
+  <section class="products">
+  <div class="card tshirt"> <img src="black_tshirt.png" onclick="location.href='../clothes/tshirts.html'">
+    <p>Oversize футболка</p>
+    <span>5.000₸</span>
+  </div>
+
+  <div class="card hoodie"> <img src="navy_hoodie.png" onclick="location.href='../clothes/hoodies.html'">
+    <p>Толстовка</p>
+    <span>10.000₸</span>
+  </div>
+  <div class="card sweatshirt"> <img src="white_sweatshirt.png" onclick="location.href='../clothes/sweatshirts.html'">
+    <p>Свитшот</p>
+    <span>8.000₸</span>
+  </div>
+  <div class="card polo"> <img src="white_polo.png" onclick ="location.href='../clothes/polos.html'">
+    <p>Базовое поло</p>
+    <span>7.000₸</span>
+  </div>
+  <div class="card classic-tshirt"> <img src="black_classic_tshirt.png" onclick ="location.href='../clothes/classic-tshirt.html'">
+    <p>Classic Футболка</p>
+    <span>6.000₸</span>
+  </section>
+  
+</div>
+<script>
+  
+  const searchInput = document.getElementById('search-input');
+  const clearBtn = document.getElementById('clear-search');
+  const buttons = document.querySelectorAll('.category-btn');
+  const cards = document.querySelectorAll('.card');
+
+  let currentCategory = 'all';
+
+  function filterProducts() {
+    const searchText = searchInput.value.toLowerCase();
+    
+    // Показываем/скрываем крестик
+    clearBtn.style.display = searchText.length > 0 ? 'block' : 'none';
+
+    cards.forEach(card => {
+      const title = card.querySelector('p').textContent.toLowerCase();
+      const matchesSearch = title.includes(searchText);
+      const matchesCategory = currentCategory === 'all' || card.classList.contains(currentCategory);
+
+      card.style.display = (matchesSearch && matchesCategory) ? 'block' : 'none';
+    });
+  }
+
+  // Логика поиска
+  searchInput.addEventListener('input', filterProducts);
+
+  // Логика крестика
+  clearBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    filterProducts();
+    searchInput.focus();
+  });
+
+  // Логика кнопок категорий
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      buttons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      currentCategory = button.getAttribute('data-filter');
+      filterProducts();
+    });
+  });
+  
+</script>
+<footer>© 2025 Love is — сайт by <a href="https://spiritz-site.github.io/spiritz/" target="_blank" style="color:#1DA1F2; text-decoration:none;">spiritz.design</a></footer>
+<style>
+  .card {
+  /* Другие ваши стили (ширина, фон и т.д.) */
+  
+  /* Добавляем плавность */
+  transition: transform 0.3s ease; 
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+.card:hover {
+  transform: scale(1.05);
+}  
+</style>
+</html>
