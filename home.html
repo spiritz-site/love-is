@@ -6,129 +6,140 @@
   <title>Главная</title>
   <link rel="stylesheet" href="home-style.css" />
   <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-</style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    .card { transition: transform 0.3s ease; cursor: pointer; }
+    .card:hover { transform: scale(1.05); }
+    /* Спиннер загрузки */
+    #loading { text-align: center; padding: 20px; font-size: 18px; color: #666; }
+  </style>
 </head>
 <body>
 
 <div class="app">
-
-
-  <!-- Header -->
   <header class="header">
     <div class="search-box">
-  <img src="Search.png" alt="search">
-  <input type="text" id="search-input" placeholder="Іздеу / Поиск">
-  <span id="clear-search" style="display:none; cursor:pointer; margin-left:15px; font-size:20px; color:#999;">&times;</span>
-</div>
-    <img 
-  class="logo" 
-  src="spiritz.jpg" 
-  alt="logo" 
-  onclick="location.href='https://spiritz-site.github.io/spiritz/';" 
-  style="cursor: pointer;">
+      <img src="Search.png" alt="search">
+      <input type="text" id="search-input" placeholder="Іздеу / Поиск">
+      <span id="clear-search" style="display:none; cursor:pointer; margin-left:15px; font-size:20px; color:#999;">&times;</span>
+    </div>
+    <img class="logo" src="spiritz.jpg" alt="logo" onclick="location.href='index.html';" style="cursor: pointer;">
   </header>
 
-  <!-- Banner -->
   <section class="banner">
     <img src="banner.png" alt="banner">
   </section>
 
-
-  <!-- Categories -->
   <section class="categories">
-  <button class="category-btn active" data-filter="all">Барлығы</button>
-  <button class="category-btn" data-filter="tshirt">Футболка</button>
-  <button class="category-btn" data-filter="sweatshirt">Свитшот</button>
-  <button class="category-btn" data-filter="hoodie">Толстовка</button>
-  <button class="category-btn" data-filter="polo">Поло</button>
-  <button class="category-btn" data-filter="designs">Дизайн</button>
-</section>
-
-  <!-- Products -->
-  <section class="products">
-  <div class="card tshirt"> <img src="black_tshirt.png" onclick="location.href='tshirts.html'">
-    <p>Oversize футболка</p>
-    <span>5.000₸</span>
-  </div>
-
-  <div class="card hoodie"> <img src="navy_hoodie.png" onclick="location.href='hoodies.html'">
-    <p>Толстовка</p>
-    <span>10.000₸</span>
-  </div>
-  <div class="card sweatshirt"> <img src="white_sweatshirt.png" onclick="location.href='sweatshirts.html'">
-    <p>Свитшот</p>
-    <span>8.000₸</span>
-  </div>
-  <div class="card polo"> <img src="white_polo.png" onclick ="location.href='polos.html'">
-    <p>Базовое поло</p>
-    <span>7.000₸</span>
-  </div>
-  <div class="card classic-tshirt"> <img src="black_classic_tshirt.png" onclick ="location.href='classic-tshirt.html'">
-    <p>Classic Футболка</p>
-    <span>6.000₸</span>
+    <button class="category-btn active" data-filter="all">Барлығы</button>
+    <button class="category-btn" data-filter="tshirt">Футболка</button>
+    <button class="category-btn" data-filter="sweatshirt">Свитшот</button>
+    <button class="category-btn" data-filter="hoodie">Толстовка</button>
+    <button class="category-btn" data-filter="polo">Поло</button>
+    <button class="category-btn" data-filter="designs">Дизайн</button>
   </section>
+
+  <section class="products" id="products-container">
+    <div id="loading">Загрузка товаров...</div>
+    </section>
   
+  <footer>© 2025 Love is — сайт by <a href="#" style="color:#1DA1F2; text-decoration:none;">spiritz.design</a></footer>
 </div>
+
 <script>
-  
+  // ВСТАВЬТЕ СЮДА ССЫЛКУ НА ВАШ CSV (из Google Sheets "Опубликовать в интернете")
+  const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpiAioBFnkMpw75uD--nBtz9zsjEcOBtN72qQFCfV_zvI9UYzKiQnM6eOMr51PNkSLWp_V8FPoxMt_/pub?output=csv'; 
+
+  const container = document.getElementById('products-container');
   const searchInput = document.getElementById('search-input');
   const clearBtn = document.getElementById('clear-search');
-  const buttons = document.querySelectorAll('.category-btn');
-  const cards = document.querySelectorAll('.card');
-
+  const categoryBtns = document.querySelectorAll('.category-btn');
+  
+  let allProducts = [];
   let currentCategory = 'all';
 
-  function filterProducts() {
-    const searchText = searchInput.value.toLowerCase();
-    
-    // Показываем/скрываем крестик
-    clearBtn.style.display = searchText.length > 0 ? 'block' : 'none';
-
-    cards.forEach(card => {
-      const title = card.querySelector('p').textContent.toLowerCase();
-      const matchesSearch = title.includes(searchText);
-      const matchesCategory = currentCategory === 'all' || card.classList.contains(currentCategory);
-
-      card.style.display = (matchesSearch && matchesCategory) ? 'block' : 'none';
+  // 1. Загрузка данных
+  fetch(SHEET_CSV_URL)
+    .then(res => res.text())
+    .then(csvText => {
+      allProducts = csvToJSON(csvText);
+      renderProducts(allProducts);
+    })
+    .catch(err => {
+      container.innerHTML = '<p style="text-align:center; color:red;">Ошибка загрузки каталога</p>';
+      console.error(err);
     });
+
+  // 2. Функция рендера карточек
+  function renderProducts(products) {
+    container.innerHTML = '';
+    
+    if (products.length === 0) {
+      container.innerHTML = '<p style="padding:20px;">Ничего не найдено</p>';
+      return;
+    }
+
+    products.forEach(product => {
+      // Фильтрация
+      const matchesCategory = currentCategory === 'all' || product.category === currentCategory;
+      const matchesSearch = product.title.toLowerCase().includes(searchInput.value.toLowerCase());
+
+      if (matchesCategory && matchesSearch) {
+        const card = document.createElement('div');
+        card.className = `card ${product.category}`;
+        // При клике переходим на product.html с ID товара
+        card.onclick = () => location.href = `product.html?id=${product.id}`;
+        
+        card.innerHTML = `
+          <img src="${product.main_image}" alt="${product.title}">
+          <p>${product.title}</p>
+          <span>${product.price}₸</span>
+        `;
+        container.appendChild(card);
+      }
+    });
+    
+    // Управление крестиком поиска
+    clearBtn.style.display = searchInput.value.length > 0 ? 'block' : 'none';
   }
 
-  // Логика поиска
-  searchInput.addEventListener('input', filterProducts);
-
-  // Логика крестика
+  // 3. Обработчики событий
+  searchInput.addEventListener('input', () => renderProducts(allProducts));
+  
   clearBtn.addEventListener('click', () => {
     searchInput.value = '';
-    filterProducts();
+    renderProducts(allProducts);
     searchInput.focus();
   });
 
-  // Логика кнопок категорий
-  buttons.forEach(button => {
-    button.addEventListener('click', () => {
-      buttons.forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
-      currentCategory = button.getAttribute('data-filter');
-      filterProducts();
+  categoryBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      categoryBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCategory = btn.getAttribute('data-filter');
+      renderProducts(allProducts);
     });
   });
-  
-</script>
-<footer>© 2025 Love is — сайт by <a href="https://spiritz-site.github.io/spiritz/" target="_blank" style="color:#1DA1F2; text-decoration:none;">spiritz.design</a></footer>
-<style>
-  .card {
-  /* Другие ваши стили (ширина, фон и т.д.) */
-  
-  /* Добавляем плавность */
-  transition: transform 0.3s ease; 
-}
 
-.card:hover {
-  transform: scale(1.05);
-}
-.card:hover {
-  transform: scale(1.05);
-}  
-</style>
+  // 4. Парсер CSV в JSON
+  function csvToJSON(csv) {
+    const lines = csv.split('\n');
+    const result = [];
+    const headers = lines[0].split(',').map(h => h.trim());
+
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i]) continue;
+      // Простой сплит по запятой (внимание: не используйте запятые внутри описания в Google Sheets!)
+      const obj = {};
+      const currentline = lines[i].split(','); 
+
+      headers.forEach((header, index) => {
+        obj[header] = currentline[index] ? currentline[index].trim() : '';
+      });
+      result.push(obj);
+    }
+    return result;
+  }
+</script>
+</body>
 </html>
