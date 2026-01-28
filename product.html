@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Загрузка...</title>
+  <link rel="stylesheet" href="style-clothes.css">
+  <style>
+    /* Стили из вашего примера */
+    .color-dot { cursor: pointer; transition: transform 0.2s ease; border: 1px solid #ccc; }
+    .color-dot:hover { transform: scale(1.2); }
+    .color-dot.active { outline: 2px solid #000; outline-offset: 2px; }
+    .size-box { cursor: pointer; }
+    .size-box.selected { background-color: #000; color: #fff; }
+    
+    /* Цвета точек (генерируются динамически, но базовые классы нужны) */
+    .dot-black { background: #000; }
+    .dot-white { background: #fff; }
+    .dot-yellow { background: #FFD700; }
+    .dot-red { background: #800000; } /* Ваш пример red был темно-серым? настройте hex */
+    .dot-green { background: #006400; }
+    .dot-custom { background: #ccc; } /* Дефолтный цвет */
+    
+    /* Оверлей */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; display: none; }
+    .overlay.visible { display: flex; }
+    .overlay-box { background: #fff; padding: 24px; border-radius: 16px; text-align: center; }
+    .overlay-box button { background: #000; color: #fff; border: none; padding: 8px 18px; border-radius: 99px; cursor: pointer; }
+    .btn-heart img.active { filter: brightness(0) saturate(100%) invert(23%) sepia(94%) saturate(7482%) hue-rotate(353deg); }
+  </style>
+</head>
+<body>
+
+  <div id="overlay" class="overlay">
+    <div class="overlay-box">
+      <p>Өлшемді таңдаңыз<br>Выберите размер</p>
+      <button onclick="closeOverlay()">Окей</button>
+    </div>
+  </div>
+
+  <div class="product-card" id="app">
+    <div class="image-container">
+      <img id="main-img" class="main-tshirt" src="" alt=""> 
+      
+      <button class="circle-btn btn-back" onclick="window.history.back()"> 
+        <img src="Back.png" alt="Назад">
+      </button>
+      
+      <button class="circle-btn btn-heart" id="favBtn">
+        <img src="Heart.png" alt="В избранное" id="heartIcon">
+      </button>
+    </div>
+
+    <div class="content-padding">
+      <div class="meta-row">
+        <span class="oversize-label" id="category-label">...</span>
+        <div class="color-picker" id="color-container"></div>
+      </div>
+
+      <h1 id="product-title" class="product-title">Загрузка...</h1>
+      
+      <div class="price-row">
+        <div class="counter">
+          <button class="counter-btn" onclick="changeQty(-1)">-</button>
+          <span id="quantity" class="counter-val">01</span>
+          <button class="counter-btn" onclick="changeQty(1)">+</button>
+        </div>
+        <div class="price-tag"><span id="total-price">0</span>₸</div>
+      </div>
+
+      <div class="size-selector">
+        <div class="size-box" onclick="selectSize(this)">S</div>
+        <div class="size-box" onclick="selectSize(this)">M</div>
+        <div class="size-box" onclick="selectSize(this)">L</div>
+        <div class="size-box" onclick="selectSize(this)">XL</div>
+        <div class="size-box" onclick="selectSize(this)">2XL</div>
+      </div>
+
+      <div class="description" id="product-desc"></div>
+
+      <button class="buy-button" onclick="orderWhatsApp()">Заказать</button>
+    </div>
+  </div>
+
+<script>
+  const SHEET_CSV_URL = 'ВАША_ССЫЛКА_ТУТ'; // ТА ЖЕ ССЫЛКА ЧТО И В HOME.HTML
+
+  let productData = null;
+  let pricePerUnit = 0;
+  let currentImage = '';
+
+  // Получаем ID из URL (например product.html?id=1)
+  const params = new URLSearchParams(window.location.search);
+  const productId = params.get('id');
+
+  // Загружаем данные
+  fetch(SHEET_CSV_URL)
+    .then(res => res.text())
+    .then(csv => {
+      const products = csvToJSON(csv);
+      // Ищем товар с нужным ID
+      productData = products.find(p => p.id === productId);
+      
+      if(productData) {
+        initProductPage(productData);
+      } else {
+        document.body.innerHTML = "<h1>Товар не найден</h1>";
+      }
+    });
+
+  function initProductPage(product) {
+    // Заполняем базовые поля
+    document.title = product.title;
+    document.getElementById('product-title').innerText = product.title;
+    document.getElementById('category-label').innerText = product.category;
+    document.getElementById('product-desc').innerHTML = product.description; // Поддерживает <br>
+    
+    // Цена
+    pricePerUnit = parseInt(product.price.replace(/\D/g, '')); // Удаляем все кроме цифр
+    updatePrice();
+
+    // Главное изображение
+    currentImage = product.main_image;
+    document.getElementById('main-img').src = currentImage;
+
+    // Генерация цветов (Парсим строку вида "Черный:black.png; Белый:white.png")
+    // Если в таблице пусто, скрываем блок
+    const colorContainer = document.getElementById('color-container');
+    if (product.variants && product.variants.trim() !== '') {
+      const variants = product.variants.split(';');
+      
+      variants.forEach((v, index) => {
+        const [colorName, imgSrc] = v.split(':');
+        if(!imgSrc) return;
+
+        const dot = document.createElement('div');
+        dot.className = 'color-dot';
+        // Пытаемся угадать цвет для CSS класса, либо ставим серый
+        const cssClass = getColorClass(colorName.trim());
+        dot.classList.add(cssClass);
+        
+        if (index === 0) dot.classList.add('active'); // Первый активен
+
+        dot.onclick = () => {
+           // Смена картинки
+           document.getElementById('main-img').src = imgSrc.trim();
+           // Смена активного класса
+           document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+           dot.classList.add('active');
+           // Обновляем название (опционально)
+           document.getElementById('product-title').innerText = `${colorName.trim()} ${product.title}`;
+        };
+        
+        colorContainer.appendChild(dot);
+      });
+    }
+  }
+
+  // Вспомогательная функция для определения цвета кружочка
+  function getColorClass(name) {
+    name = name.toLowerCase();
+    if(name.includes('черн') || name.includes('black')) return 'dot-black';
+    if(name.includes('бел') || name.includes('white')) return 'dot-white';
+    if(name.includes('желт') || name.includes('yellow')) return 'dot-yellow';
+    if(name.includes('крас') || name.includes('red') || name.includes('сер')) return 'dot-red'; 
+    if(name.includes('зел') || name.includes('green')) return 'dot-green';
+    return 'dot-custom';
+  }
+
+  // --- Стандартная логика (счетчик, размеры, избранное) ---
+  
+  function updatePrice() {
+     const qty = parseInt(document.getElementById('quantity').innerText);
+     document.getElementById('total-price').innerText = qty * pricePerUnit;
+  }
+
+  function changeQty(amount) {
+    const qtyElement = document.getElementById('quantity');
+    let currentQty = parseInt(qtyElement.innerText);
+    currentQty += amount;
+    if (currentQty < 1) currentQty = 1;
+    qtyElement.innerText = currentQty < 10 ? '0' + currentQty : currentQty;
+    updatePrice();
+  }
+
+  function selectSize(element) {
+    document.querySelectorAll('.size-box').forEach(box => box.classList.remove('selected'));
+    element.classList.add('selected');
+  }
+
+  function orderWhatsApp() {
+    const phone = "7472878780";
+    const title = document.getElementById("product-title").innerText;
+    const qty = document.getElementById("quantity").innerText;
+    const price = document.getElementById("total-price").innerText;
+    const sizeEl = document.querySelector(".size-box.selected");
+
+    if (!sizeEl) {
+      document.getElementById("overlay").classList.add("visible");
+      return;
+    }
+
+    const text = `Здравствуйте!\nХочу заказать:\n${title}\nРазмер: ${sizeEl.innerText}\nКоличество: ${qty}\nИтого: ${price}₸`;
+    window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+  }
+
+  function closeOverlay() {
+    document.getElementById("overlay").classList.remove("visible");
+  }
+
+  // Избранное
+  const favKey = "fav-" + productId;
+  const favIcon = document.getElementById("heartIcon");
+  
+  if (localStorage.getItem(favKey)) favIcon.classList.add("active");
+
+  document.getElementById("favBtn").onclick = () => {
+    if (localStorage.getItem(favKey)) {
+      localStorage.removeItem(favKey);
+      favIcon.classList.remove("active");
+    } else {
+      localStorage.setItem(favKey, "1");
+      favIcon.classList.add("active");
+    }
+  };
+
+  // Тот же парсер CSV
+  function csvToJSON(csv) {
+    const lines = csv.split('\n');
+    const result = [];
+    const headers = lines[0].split(',').map(h => h.trim());
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i]) continue;
+      const obj = {};
+      const currentline = lines[i].split(','); 
+      headers.forEach((header, index) => {
+        obj[header] = currentline[index] ? currentline[index].trim() : '';
+      });
+      result.push(obj);
+    }
+    return result;
+  }
+</script>
+</body>
+</html>
